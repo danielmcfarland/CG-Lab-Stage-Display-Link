@@ -16,49 +16,34 @@ class ViewController: NSViewController {
     
     @IBOutlet weak var buttonLabel: NSButton!
     
-    var connected = false
+    private var proPresenterService: ProPresenterService!
+    private let nc = NotificationCenter.default
+    private var status: ConnectionStatus!
 
     @IBAction func actionButton(_ sender: Any) {
-        if connected == false {
-            print("connecting")
-            buttonLabel.title = "Connecting"
-            connectionStatus.stringValue = "Connecting"
-            buttonLabel.isEnabled = false
-            connectionServer.isEnabled = false
-            connectionPort.isEnabled = false
-            connectionPassword.isEnabled = false
-            
-            DispatchQueue.main.asyncAfter(deadline: .now() + 10) {
-                self.connected = true
-                self.buttonLabel.title = "Disconnect"
-                self.buttonLabel.isEnabled = true
-                self.connectionStatus.stringValue = "Connected"
-            }
-            
-        } else {
-            print("disconnecting")
-            buttonLabel.title = "Disconnecting"
-            connectionStatus.stringValue = "Disconnecting"
-            buttonLabel.isEnabled = false
-            
-            DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
-                self.connected = false
-                self.buttonLabel.title = "Connect"
-                self.buttonLabel.isEnabled = true
-                self.connectionStatus.stringValue = "Offline"
-                self.connectionServer.isEnabled = true
-                self.connectionPort.isEnabled = true
-                self.connectionPassword.isEnabled = true
+        if let status = status {
+            switch status {
+            case .connected:
+                proPresenterService.disconnect()
+            case .connecting:
+                print("connecting - do nothing - potentially cancel")
+            case .disconnected:
+                proPresenterService.setServer(server: connectionServer.stringValue)
+                proPresenterService.setPort(port: connectionPort.stringValue)
+                proPresenterService.setPassword(password: connectionPassword.stringValue)
+                proPresenterService.connect()
+            case .disconnecting:
+                print("connecting - do nothing")
             }
         }
-        
-        connected = !connected
     }
     
     override func viewDidLoad() {
         super.viewDidLoad()
 
         // Do any additional setup after loading the view.
+        nc.addObserver(self, selector: #selector(proProPresenterStatus), name: Notification.Name("ProPresenterService_Status"), object: nil)
+        proPresenterService = ProPresenterService()
     }
 
     override var representedObject: Any? {
@@ -67,6 +52,50 @@ class ViewController: NSViewController {
         }
     }
 
-
+    @objc func proProPresenterStatus(_ notification: Notification) {
+        if let connectionStatus = notification.object as? ConnectionStatus {
+            status = connectionStatus
+            updateUserInterface()
+        }
+    }
+    
+    func updateUserInterface() {
+        if let status = status {
+            switch status {
+            case .connected:
+                buttonLabel.title = "Disconnect"
+                buttonLabel.isEnabled = true
+                connectionStatus.stringValue = "Connected"
+                
+                connectionServer.isEnabled = false
+                connectionPort.isEnabled = false
+                connectionPassword.isEnabled = false
+            case .connecting:
+                buttonLabel.title = "Connecting"
+                buttonLabel.isEnabled = false
+                connectionStatus.stringValue = "Connecting"
+                
+                connectionServer.isEnabled = false
+                connectionPort.isEnabled = false
+                connectionPassword.isEnabled = false
+            case .disconnected:
+                buttonLabel.title = "Connect"
+                buttonLabel.isEnabled = true
+                connectionStatus.stringValue = "Offline"
+                
+                connectionServer.isEnabled = true
+                connectionPort.isEnabled = true
+                connectionPassword.isEnabled = true
+            case .disconnecting:
+                buttonLabel.title = "Disconnecting"
+                buttonLabel.isEnabled = false
+                connectionStatus.stringValue = "Disconnecting"
+                
+                connectionServer.isEnabled = false
+                connectionPort.isEnabled = false
+                connectionPassword.isEnabled = false
+            }
+        }
+    }
 }
 

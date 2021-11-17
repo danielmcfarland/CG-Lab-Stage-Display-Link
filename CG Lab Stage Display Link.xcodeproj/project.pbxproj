@@ -11,6 +11,8 @@
 		685692BF2743A840006F841E /* ViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 685692BE2743A840006F841E /* ViewController.swift */; };
 		685692C12743A84D006F841E /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 685692C02743A84D006F841E /* Assets.xcassets */; };
 		685692C42743A84D006F841E /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 685692C22743A84D006F841E /* Main.storyboard */; };
+		685692CC27442EE1006F841E /* ProPresenterService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 685692CB27442EE1006F841E /* ProPresenterService.swift */; };
+		685692CF27442F95006F841E /* Starscream in Frameworks */ = {isa = PBXBuildFile; productRef = 685692CE27442F95006F841E /* Starscream */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -20,6 +22,7 @@
 		685692C02743A84D006F841E /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		685692C32743A84D006F841E /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/Main.storyboard; sourceTree = "<group>"; };
 		685692C52743A84D006F841E /* CG_Lab_Stage_Display_Link.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = CG_Lab_Stage_Display_Link.entitlements; sourceTree = "<group>"; };
+		685692CB27442EE1006F841E /* ProPresenterService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProPresenterService.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -27,6 +30,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				685692CF27442F95006F841E /* Starscream in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -54,6 +58,7 @@
 			children = (
 				685692BC2743A840006F841E /* AppDelegate.swift */,
 				685692BE2743A840006F841E /* ViewController.swift */,
+				685692CB27442EE1006F841E /* ProPresenterService.swift */,
 				685692C02743A84D006F841E /* Assets.xcassets */,
 				685692C22743A84D006F841E /* Main.storyboard */,
 				685692C52743A84D006F841E /* CG_Lab_Stage_Display_Link.entitlements */,
@@ -77,6 +82,9 @@
 			dependencies = (
 			);
 			name = "CG Lab Stage Display Link";
+			packageProductDependencies = (
+				685692CE27442F95006F841E /* Starscream */,
+			);
 			productName = "CG Lab Stage Display Link";
 			productReference = 685692B92743A840006F841E /* CG Lab Stage Display Link.app */;
 			productType = "com.apple.product-type.application";
@@ -105,6 +113,9 @@
 				Base,
 			);
 			mainGroup = 685692B02743A840006F841E;
+			packageReferences = (
+				685692CD27442F95006F841E /* XCRemoteSwiftPackageReference "Starscream" */,
+			);
 			productRefGroup = 685692BA2743A840006F841E /* Products */;
 			projectDirPath = "";
 			projectRoot = "";
@@ -133,6 +144,7 @@
 			files = (
 				685692BF2743A840006F841E /* ViewController.swift in Sources */,
 				685692BD2743A840006F841E /* AppDelegate.swift in Sources */,
+				685692CC27442EE1006F841E /* ProPresenterService.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -341,6 +353,25 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		685692CD27442F95006F841E /* XCRemoteSwiftPackageReference "Starscream" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/daltoniam/Starscream.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 4.0.0;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		685692CE27442F95006F841E /* Starscream */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 685692CD27442F95006F841E /* XCRemoteSwiftPackageReference "Starscream" */;
+			productName = Starscream;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = 685692B12743A840006F841E /* Project object */;
 }
