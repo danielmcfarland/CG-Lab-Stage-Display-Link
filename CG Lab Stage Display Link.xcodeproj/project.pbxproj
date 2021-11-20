@@ -13,6 +13,7 @@
 		685692C42743A84D006F841E /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 685692C22743A84D006F841E /* Main.storyboard */; };
 		685692CC27442EE1006F841E /* ProPresenterService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 685692CB27442EE1006F841E /* ProPresenterService.swift */; };
 		685692CF27442F95006F841E /* Starscream in Frameworks */ = {isa = PBXBuildFile; productRef = 685692CE27442F95006F841E /* Starscream */; };
+		685692D127453EF0006F841E /* ProPresenterMessage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 685692D027453EF0006F841E /* ProPresenterMessage.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -23,6 +24,7 @@
 		685692C32743A84D006F841E /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/Main.storyboard; sourceTree = "<group>"; };
 		685692C52743A84D006F841E /* CG_Lab_Stage_Display_Link.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = CG_Lab_Stage_Display_Link.entitlements; sourceTree = "<group>"; };
 		685692CB27442EE1006F841E /* ProPresenterService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProPresenterService.swift; sourceTree = "<group>"; };
+		685692D027453EF0006F841E /* ProPresenterMessage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProPresenterMessage.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -58,6 +60,7 @@
 			children = (
 				685692BC2743A840006F841E /* AppDelegate.swift */,
 				685692BE2743A840006F841E /* ViewController.swift */,
+				685692D027453EF0006F841E /* ProPresenterMessage.swift */,
 				685692CB27442EE1006F841E /* ProPresenterService.swift */,
 				685692C02743A84D006F841E /* Assets.xcassets */,
 				685692C22743A84D006F841E /* Main.storyboard */,
@@ -144,6 +147,7 @@
 			files = (
 				685692BF2743A840006F841E /* ViewController.swift in Sources */,
 				685692BD2743A840006F841E /* AppDelegate.swift in Sources */,
+				685692D127453EF0006F841E /* ProPresenterMessage.swift in Sources */,
 				685692CC27442EE1006F841E /* ProPresenterService.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

@@ -22,6 +22,10 @@ class ProPresenterService: WebSocketDelegate {
     private var password: String?
     private var request: URLRequest!
     private let nc = NotificationCenter.default
+    private var timer: Timer?
+    
+    private var currentStageDisplayLayout: ProPresenterStageLayout?
+    private var allStageDisplayLayouts: ProPresenterAllStageLayout?
     
     init() {
         nc.post(name: Notification.Name("ProPresenterService_Status"), object: connectionStatus)
@@ -43,19 +47,33 @@ class ProPresenterService: WebSocketDelegate {
     }
     
     func connect() {
+        if let timer = timer {
+            timer.invalidate()
+        }
         if let server = server, let port = port {
-            connectionStatus = .connecting
-            request = URLRequest(url: URL(string: "ws://\(server):\(port)/stagedisplay")!)
-            request.timeoutInterval = 5
-            socket = WebSocket(request: request)
-            socket.delegate = self
-            socket.connect()
+            if server.count > 0 && port.count > 0 {
+                connectionStatus = .connecting
+                notifyStatus()
+                request = URLRequest(url: URL(string: "ws://\(server):\(port)/stagedisplay")!)
+                request.timeoutInterval = 2
+                socket = WebSocket(request: request)
+                socket.delegate = self
+                socket.connect()
+                
+                DispatchQueue.main.asyncAfter(deadline: .now() + 5) {
+                    if self.connectionStatus != .connected {
+                        self.socket.forceDisconnect()
+                        self.connect()
+                    }
+                }
+            }
         }
     }
     
     func disconnect() {
         if let socket = socket {
             connectionStatus = .disconnecting
+            notifyStatus()
             socket.forceDisconnect()
         }
     }
@@ -67,7 +85,22 @@ class ProPresenterService: WebSocketDelegate {
         }
     }
     
+    func allStageLayouts() {
+        if let socket = socket {
+            let aslString = "{\"acn\": \"asl\"}"
+            socket.write(string: aslString)
+        }
+    }
+    
+    func currentStageLayout() {
+        if let socket = socket {
+            let slString = "{\"acn\": \"psl\"}"
+            socket.write(string: slString)
+        }
+    }
+    
     func didReceive(event: WebSocketEvent, client: WebSocket) {
+//        print(event)
         switch event {
         case .connected(let headers):
             authenticate()
@@ -89,9 +122,22 @@ class ProPresenterService: WebSocketDelegate {
         case .reconnectSuggested(_):
             break
         case .cancelled:
-            connectionStatus = .disconnected
-            notifyStatus()
             print("cancelled")
+            if connectionStatus != .disconnecting {
+                if let timer = timer {
+                    timer.invalidate()
+                    self.timer = nil
+                }
+                
+                DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
+                    // Put your code which should be executed with a delay here
+                    print("*** setup reconnect")
+                    self.connect()
+                }
+            } else {
+                connectionStatus = .disconnected
+                notifyStatus()
+            }
         case .error(let error):
             connectionStatus = .disconnected
             notifyStatus()
@@ -100,22 +146,103 @@ class ProPresenterService: WebSocketDelegate {
     }
     
     func handleError(_ error: Error?) {
-        print("handleError")
-        if let error = error {
-            print(error.localizedDescription)
+            if let e = error as? WSError {
+                print("websocket encountered an error: \(e.message)")
+            } else if let e = error {
+                print("websocket encountered an error: \(e.localizedDescription)")
+            } else {
+                print("websocket encountered an error")
+            }
         }
-    }
     
-    func messageReceived(_ message: String) {
-        if message == "{\"acn\":\"ath\",\"ath\":true,\"err\":\"\"}" {
-            connectionStatus = .connected
-            notifyStatus()
+    func messageReceived(_ data: String) {
+        
+        let json = data.data(using: .utf8)!
+        let decoder = JSONDecoder()
+
+        do {
+            var message: Decodable!
+            switch try decoder.decode(ProPresenterMessage.self, from: json) {
+            case .ath(let rawMessage):
+                if rawMessage.ath {
+                    if connectionStatus != .connected {
+                        timer = Timer.scheduledTimer(timeInterval: 10, target: self, selector: #selector(checkConnection), userInfo: nil, repeats: true)
+                        connectionStatus = .connected
+                        notifyStatus()
+                        allStageLayouts()
+                        currentStageLayout()
+                    }
+                }
+            case .sys(let rawMessage):
+                message = rawMessage
+            case .tmr(let rawMessage):
+                message = rawMessage
+            case .fv(let rawMessage):
+                message = rawMessage
+            case .cs(let rawMessage):
+                message = rawMessage
+            case .ns(let rawMessage):
+                message = rawMessage
+            case .csn(let rawMessage):
+                message = rawMessage
+            case .nsn(let rawMessage):
+                message = rawMessage
+            case .sl(let rawMessage):
+                message = rawMessage
+                if currentStageDisplayLayout?.uid != rawMessage.uid {
+                    currentStageDisplayLayout = rawMessage
+                    triggerRedraw()
+                }
+            case .psl(let rawMessage):
+                message = rawMessage
+                if let allStageDisplayLayouts = allStageDisplayLayouts {
+                    let newLayout = allStageDisplayLayouts.ary.filter {
+                        $0.uid == rawMessage.uid
+                    }.first
+                    if currentStageDisplayLayout?.uid != newLayout?.uid {
+                        currentStageDisplayLayout = newLayout
+                        triggerRedraw()
+                    }
+                    
+                }
+            case .asl(let rawMessage):
+                message = rawMessage
+                allStageDisplayLayouts = rawMessage
+            case .msg(let rawMessage):
+                message = rawMessage
+            }
+            if let message = message {
+//                print(message)
+            }
+        } catch {
+            print("error occurred decoding: \(error)")
+            print(data)
         }
-        print("\(message)")
     }
     
     func notifyStatus() {
-        print("notifyStatus: \(connectionStatus)")
         nc.post(name: Notification.Name("ProPresenterService_Status"), object: connectionStatus)
+    }
+    
+    @objc func checkConnection() {
+//        authenticate()
+    }
+    
+    func triggerRedraw() {
+        print("trigger draw of stage display")
+        
+        if let currentStageDisplayLayout = currentStageDisplayLayout {
+            do {
+                currentStageDisplayLayout.fme.forEach { frame in
+                    
+                    print(frame.getWidth())
+                    print(frame.getHeight())
+                    
+                    print(frame.getOrigin())
+                }
+            } catch {
+                
+            }
+        }
     }
 }
