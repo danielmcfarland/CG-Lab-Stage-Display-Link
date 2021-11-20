@@ -23,12 +23,14 @@ class ProPresenterService: WebSocketDelegate {
     private var request: URLRequest!
     private let nc = NotificationCenter.default
     private var timer: Timer?
+    private var syphonServer: SyphonService?
     
     private var currentStageDisplayLayout: ProPresenterStageLayout?
     private var allStageDisplayLayouts: ProPresenterAllStageLayout?
     
     init() {
         nc.post(name: Notification.Name("ProPresenterService_Status"), object: connectionStatus)
+        syphonServer = SyphonService()
     }
     
     var socket: WebSocket!
@@ -189,21 +191,20 @@ class ProPresenterService: WebSocketDelegate {
                 message = rawMessage
             case .sl(let rawMessage):
                 message = rawMessage
-                if currentStageDisplayLayout?.uid != rawMessage.uid {
+//                if currentStageDisplayLayout?.uid != rawMessage.uid {
                     currentStageDisplayLayout = rawMessage
                     triggerRedraw()
-                }
+//                }
             case .psl(let rawMessage):
                 message = rawMessage
                 if let allStageDisplayLayouts = allStageDisplayLayouts {
                     let newLayout = allStageDisplayLayouts.ary.filter {
                         $0.uid == rawMessage.uid
                     }.first
-                    if currentStageDisplayLayout?.uid != newLayout?.uid {
+//                    if currentStageDisplayLayout?.uid != newLayout?.uid {
                         currentStageDisplayLayout = newLayout
                         triggerRedraw()
-                    }
-                    
+//                    }
                 }
             case .asl(let rawMessage):
                 message = rawMessage
