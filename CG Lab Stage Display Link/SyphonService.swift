@@ -23,27 +23,27 @@ class SyphonService {
     
     var currentFrame: CIImage!
     
+    var globalFormat = GraphicsImageRendererFormat()
+    var globalRenderer: GraphicsImageRenderer!
+    var globalContext: GraphicsImageRendererContext!
+    var globalImage: NSImage!
+    
+    var frameActions: [CGRect]! = []
+    
     init() {
+        globalFormat.scale = 1
         
-        currentFrame = drawMultiviewer().ciImage()
+        setupRenderer()
+        renderFrame()
         
         CVMetalTextureCacheCreate(nil, nil, metalDevice!, nil, &textureCache)
         syphonServer = SyphonMetalServer(name: "Video", device: metalDevice!)
         
-        CVDisplayLinkCreateWithActiveCGDisplays(&displayLink)
-        CVDisplayLinkSetOutputCallback(displayLink!, { (displayLink, inNow, inOutputTime, flagsIn, flagsOut, displayLinkContext) -> CVReturn in
-            autoreleasepool {
-                unsafeBitCast(displayLinkContext, to: SyphonService.self).generateOutput()
-            }
-            return kCVReturnSuccess
-        }, Unmanaged.passUnretained(self).toOpaque())
-
-        CVDisplayLinkStart(displayLink!)
-        
+        _ = Timer.scheduledTimer(timeInterval: 1/24, target: self, selector: #selector(generateOutput), userInfo: nil, repeats: true)
     }
     
-    func generateOutput() {
-
+    @objc func generateOutput() {
+        
         var pixelBuffer: CVPixelBuffer?
         
         let attrs = [
@@ -77,118 +77,51 @@ class SyphonService {
         
     }
     
-    func drawMultiviewer() -> NSImage {
+    func setupRenderer() {
+        globalRenderer = GraphicsImageRenderer(size: CGSize(width: 1920, height: 1080), format: globalFormat)
+    }
+    
+    func newFrame() -> Void {
+        frameActions = []
+    }
+    
+    func addToFrame(x: Int, y: Int, width: Int, height: Int) {
+        let element = CGRect(x: x, y: y, width: width, height: height)
+        frameActions.append(element)
+    }
+    
+    func addToFrame(frame: (x: Int, y: Int, width: Int, height: Int)) {
+        addToFrame(x: frame.x, y: frame.y, width: frame.width, height: frame.height)
+    }
+    
+    func getFrame() -> NSImage {
         
-        let format = GraphicsImageRendererFormat()
-        format.scale = 1
+        let color = NSColor(deviceRed: 0.99, green: 0.8, blue: 0.00, alpha: 1.00).cgColor
         
-        let renderer = GraphicsImageRenderer(size: CGSize(width: 1920, height: 1080), format: format)
-        
-        let img = renderer.image { ctx in
+        globalImage = globalRenderer.image { context in
+            
             let background = CGRect(x: 0, y: 0, width: 1920, height: 1080)
-            ctx.cgContext.setFillColor(CGColor.black)
-            ctx.cgContext.addRect(background)
-            ctx.cgContext.drawPath(using: .fillStroke)
+            context.cgContext.setFillColor(CGColor.black)
+//            context.cgContext.setFillColor(gray: 128, alpha: 0)
+            context.cgContext.addRect(background)
+            context.cgContext.drawPath(using: .fill)
             
-            let rectangle_1 = CGRect(x: 2, y: 2, width: 956, height: 536)
-            ctx.cgContext.setFillColor(CGColor.black)
-            ctx.cgContext.setStrokeColor(CGColor.white)
-            ctx.cgContext.setLineWidth(4)
-            ctx.cgContext.clip()
-            ctx.cgContext.addRect(rectangle_1)
-            ctx.cgContext.drawPath(using: .fillStroke)
+            for element in self.frameActions {
+                context.cgContext.setFillColor(CGColor.black)
+                context.cgContext.setStrokeColor(color)
+                context.cgContext.setLineWidth(1)
+                // context.cgContext.clip()
+                context.cgContext.addRect(element)
+                context.cgContext.drawPath(using: .fillStroke)
+            }
             
-            let rectangle_2 = CGRect(x: 962, y: 2, width: 956, height: 536)
-            ctx.cgContext.setFillColor(CGColor.black)
-            ctx.cgContext.setStrokeColor(CGColor.white)
-            ctx.cgContext.setLineWidth(4)
-            ctx.cgContext.clip()
-            ctx.cgContext.addRect(rectangle_2)
-            ctx.cgContext.drawPath(using: .fillStroke)
-            
-            let rectangle_3 = CGRect(x: 2, y: 542, width: 476, height: 266)
-            ctx.cgContext.setFillColor(CGColor.black)
-            ctx.cgContext.setStrokeColor(CGColor.init(red: 0, green: 1, blue: 0, alpha: 1))
-            ctx.cgContext.setLineWidth(4)
-            ctx.cgContext.clip()
-            ctx.cgContext.addRect(rectangle_3)
-            ctx.cgContext.drawPath(using: .fillStroke)
-            
-            let rectangle_4 = CGRect(x: 482, y: 542, width: 476, height: 266)
-            ctx.cgContext.setFillColor(CGColor.black)
-            ctx.cgContext.setStrokeColor(CGColor.white)
-            ctx.cgContext.setLineWidth(4)
-            ctx.cgContext.addRect(rectangle_4)
-            ctx.cgContext.drawPath(using: .fillStroke)
-            
-            let rectangle_5 = CGRect(x: 962, y: 542, width: 476, height: 266)
-            ctx.cgContext.setFillColor(CGColor.black)
-            ctx.cgContext.setStrokeColor(CGColor.white)
-            ctx.cgContext.setLineWidth(5)
-            ctx.cgContext.addRect(rectangle_5)
-            ctx.cgContext.drawPath(using: .fillStroke)
-            
-            let rectangle_6 = CGRect(x: 1442, y: 542, width: 476, height: 266)
-            ctx.cgContext.setFillColor(CGColor.black)
-            ctx.cgContext.setStrokeColor(CGColor.white)
-            ctx.cgContext.setLineWidth(5)
-            ctx.cgContext.addRect(rectangle_6)
-            ctx.cgContext.drawPath(using: .fillStroke)
-            
-            let rectangle_7 = CGRect(x: 2, y: 812, width: 476, height: 266)
-            ctx.cgContext.setFillColor(CGColor.black)
-            ctx.cgContext.setStrokeColor(CGColor.white)
-            ctx.cgContext.setLineWidth(5)
-            ctx.cgContext.addRect(rectangle_7)
-            ctx.cgContext.drawPath(using: .fillStroke)
-            
-            let rectangle_8 = CGRect(x: 482, y: 812, width: 476, height: 266)
-            ctx.cgContext.setFillColor(CGColor.black)
-            ctx.cgContext.setStrokeColor(CGColor.white)
-            ctx.cgContext.setLineWidth(5)
-            ctx.cgContext.addRect(rectangle_8)
-            ctx.cgContext.drawPath(using: .fillStroke)
-            
-            let rectangle_9 = CGRect(x: 962, y: 812, width: 476, height: 266)
-            ctx.cgContext.setFillColor(CGColor.black)
-            ctx.cgContext.setStrokeColor(CGColor.init(red: 1, green: 0, blue: 0, alpha: 1))
-            ctx.cgContext.setLineWidth(5)
-            ctx.cgContext.addRect(rectangle_9)
-            ctx.cgContext.drawPath(using: .fillStroke)
-            
-            let rectangle_10 = CGRect(x: 1442, y: 812, width: 476, height: 266)
-            ctx.cgContext.setFillColor(CGColor.black)
-            ctx.cgContext.setStrokeColor(CGColor.white)
-            ctx.cgContext.setLineWidth(5)
-            ctx.cgContext.addRect(rectangle_10)
-            ctx.cgContext.drawPath(using: .fillStroke)
-            
-            let paragraphStyle = NSMutableParagraphStyle()
-            paragraphStyle.alignment = .center
-
-            let attrs = [
-                NSAttributedString.Key.font: NSFont(name: "HelveticaNeue-Thin", size: 36)!,
-                NSAttributedString.Key.paragraphStyle: paragraphStyle,
-                NSAttributedString.Key.foregroundColor: NSColor.white,
-            ]
-            
-            let textTransform = CGAffineTransform(scaleX: -1.0, y: -1.0)
-            ctx.cgContext.textMatrix = textTransform
-            
-            ctx.cgContext.saveGState()
-            defer { ctx.cgContext.restoreGState() }
-            
-            ctx.cgContext.translateBy(x: 0, y: 1080)
-            ctx.cgContext.scaleBy(x: 1, y: -1)
-
-            let string = "Hello, World!"
-            string.draw(with: CGRect(x: 0, y: 0, width: 1920, height: 1080), options: .usesLineFragmentOrigin, attributes: attrs, context: nil)
-            
-            string.draw(with: CGRect(x: 0, y: -30, width: 1920, height: 1050), options: .usesLineFragmentOrigin, attributes: attrs, context: nil)
-
         }
         
-        return img
+        return globalImage
     }
-
+    
+    func renderFrame() -> Void {
+        currentFrame = getFrame().ciImage()
+    }
+    
 }

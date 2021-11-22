@@ -103,33 +103,45 @@ struct ProPresenterStageDisplayFrame: Codable {
         return ufr.dropFirst(2).dropLast(2).description.components(separatedBy: "}, {")
     }
     
-    var upperLeftX: Float {
+    var frameRect: FrameRect {
+        return FrameRect(displayHeight: 1080, displayWidth: 1920, left: lowerLeftX, top: lowerLeftY, right: upperRightX, bottom: upperRightY)
+    }
+    
+    var frame: (x: Int, y: Int, width: Int, height: Int) {
+        return frameRect.getFrame
+    }
+    
+    var lowerLeftX: Float {
         guard frameGeometry.count == 2 else {
+            print("error")
             return 0
         }
         
         let coords = frameGeometry[0].components(separatedBy: ", ")
         guard coords.count == 2 else {
+            print("error")
             return 0
         }
         
         return Float(coords[0]) ?? 0
     }
     
-    var upperLeftY: Float {
+    var lowerLeftY: Float {
         guard frameGeometry.count == 2 else {
+            print("error")
             return 0
         }
         
         let coords = frameGeometry[0].components(separatedBy: ", ")
         guard coords.count == 2 else {
+            print("error")
             return 0
         }
         
         return Float(coords[1]) ?? 0
     }
     
-    var lowerRightX: Float {
+    var upperRightX: Float {
         guard frameGeometry.count == 2 else {
             return 0
         }
@@ -142,68 +154,19 @@ struct ProPresenterStageDisplayFrame: Codable {
         return Float(coords[0]) ?? 0
     }
     
-    var lowerRightY: Float {
+    var upperRightY: Float {
         guard frameGeometry.count == 2 else {
+            print("error")
             return 0
         }
         
         let coords = frameGeometry[1].components(separatedBy: ", ")
         guard coords.count == 2 else {
+            print("error")
             return 0
         }
         
         return Float(coords[1]) ?? 0
-    }
-    
-    func getWidth(width: Int) -> Int {
-        return Int(getEndX(width: width) - getOriginX(width: width))
-    }
-    
-    func getWidth() -> Int {
-        return getWidth(width: 1920)
-    }
-    
-    func getHeight(height: Int) -> Int {
-        return Int(getEndY(height: height) - getOriginY(height: height))
-    }
-    
-    func getHeight() -> Int {
-        return getHeight(height: 1080)
-    }
-    
-    func getOriginX(width: Int) -> Float {
-        return Float(width) * upperLeftX
-    }
-    
-    func getOriginX() -> Float {
-        return getOriginX(width: 1920)
-    }
-    
-    func getEndX(width: Int) -> Float {
-        return Float(width) * lowerRightX
-    }
-    
-    func getOriginY(height: Int) -> Float {
-        return Float(height) * upperLeftY
-    }
-    
-    func getOriginY() -> Float {
-        return getOriginY(height: 1080)
-    }
-    
-    func getEndY(height: Int) -> Float {
-        return Float(height) * lowerRightY
-    }
-    
-    func getOrigin(width: Int, height: Int) -> ( x: Int, y: Int ) {
-        let x = getOriginX(width: width)
-        let y = getOriginY(height: height)
-        
-        return (x: Int(x), y: Int(y))
-    }
-    
-    func getOrigin() -> ( x: Int, y: Int ) {
-        return getOrigin(width: 1920, height: 1080)
     }
 }
 
@@ -268,5 +231,39 @@ extension ProPresenterMessage: Decodable {
         default:
             throw InvalidTypeError(acn: acn)
         }
+    }
+}
+
+class FrameRect {
+    var left: Float
+    var top: Float
+    var right: Float
+    var bottom: Float
+    var h2: Float
+    var displayHeight: Float
+    var displayWidth: Float
+    
+    init(displayHeight: Float, displayWidth: Float, left: Float, top: Float, right: Float, bottom: Float) {
+        self.displayHeight = displayHeight
+        self.displayWidth = displayWidth
+        
+        self.left = self.displayWidth * left
+        self.right = self.displayWidth * right + self.left
+        self.bottom = self.displayHeight * bottom
+        self.top = -((self.displayHeight * top) - self.bottom)
+        self.h2 = self.bottom + self.top
+    }
+
+    private var width: Float {
+        return right - left
+    }
+    
+    private var height: Float {
+        return h2 - top
+    }
+    
+    var getFrame: (x: Int, y: Int, width: Int, height: Int) {
+        let y = self.displayHeight - (self.bottom - self.top + self.height)
+        return (x: Int(self.left), y: Int(y), width: Int(self.width), height: Int(self.height))
     }
 }

@@ -30,7 +30,9 @@ class ProPresenterService: WebSocketDelegate {
     
     init() {
         nc.post(name: Notification.Name("ProPresenterService_Status"), object: connectionStatus)
-        syphonServer = SyphonService()
+        DispatchQueue.main.async {
+            self.syphonServer = SyphonService()
+        }
     }
     
     var socket: WebSocket!
@@ -102,7 +104,6 @@ class ProPresenterService: WebSocketDelegate {
     }
     
     func didReceive(event: WebSocketEvent, client: WebSocket) {
-//        print(event)
         switch event {
         case .connected(let headers):
             authenticate()
@@ -177,8 +178,10 @@ class ProPresenterService: WebSocketDelegate {
                 }
             case .sys(let rawMessage):
                 message = rawMessage
+                print(rawMessage)
             case .tmr(let rawMessage):
                 message = rawMessage
+                print(rawMessage)
             case .fv(let rawMessage):
                 message = rawMessage
             case .cs(let rawMessage):
@@ -191,20 +194,20 @@ class ProPresenterService: WebSocketDelegate {
                 message = rawMessage
             case .sl(let rawMessage):
                 message = rawMessage
-//                if currentStageDisplayLayout?.uid != rawMessage.uid {
+                if currentStageDisplayLayout?.uid != rawMessage.uid {
                     currentStageDisplayLayout = rawMessage
                     triggerRedraw()
-//                }
+                }
             case .psl(let rawMessage):
                 message = rawMessage
                 if let allStageDisplayLayouts = allStageDisplayLayouts {
                     let newLayout = allStageDisplayLayouts.ary.filter {
                         $0.uid == rawMessage.uid
                     }.first
-//                    if currentStageDisplayLayout?.uid != newLayout?.uid {
+                    if currentStageDisplayLayout?.uid != newLayout?.uid {
                         currentStageDisplayLayout = newLayout
                         triggerRedraw()
-//                    }
+                    }
                 }
             case .asl(let rawMessage):
                 message = rawMessage
@@ -226,24 +229,20 @@ class ProPresenterService: WebSocketDelegate {
     }
     
     @objc func checkConnection() {
-//        authenticate()
+        authenticate()
     }
     
     func triggerRedraw() {
-        print("trigger draw of stage display")
+        syphonServer?.newFrame()
         
         if let currentStageDisplayLayout = currentStageDisplayLayout {
-            do {
-                currentStageDisplayLayout.fme.forEach { frame in
-                    
-                    print(frame.getWidth())
-                    print(frame.getHeight())
-                    
-                    print(frame.getOrigin())
-                }
-            } catch {
-                
+            currentStageDisplayLayout.fme.forEach { frame in
+                self.syphonServer?.addToFrame(frame: frame.frame)
             }
+        }
+        
+        DispatchQueue.main.async {
+            self.syphonServer?.renderFrame()
         }
     }
 }
