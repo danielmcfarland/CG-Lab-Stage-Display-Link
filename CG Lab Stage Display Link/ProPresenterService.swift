@@ -28,6 +28,10 @@ class ProPresenterService: WebSocketDelegate {
     private var currentStageDisplayLayout: ProPresenterStageLayout?
     private var allStageDisplayLayouts: ProPresenterAllStageLayout?
     
+    private var systemTime: String?
+    private var messageSystem: ProPresenterSystem?
+    private var messageCurrentSlide: ProPresenterCurrentSlide?
+    
     init() {
         nc.post(name: Notification.Name("ProPresenterService_Status"), object: connectionStatus)
         DispatchQueue.main.async {
@@ -103,6 +107,13 @@ class ProPresenterService: WebSocketDelegate {
         }
     }
     
+    func requestFrameValues(_ uuid: String) {
+        if let socket = socket {
+            let request = "{\"acn\": \"fv\", \"uid\":\"\(uuid)\"}"
+            socket.write(string: request)
+        }
+    }
+    
     func didReceive(event: WebSocketEvent, client: WebSocket) {
         switch event {
         case .connected(let headers):
@@ -159,9 +170,10 @@ class ProPresenterService: WebSocketDelegate {
         }
     
     func messageReceived(_ data: String) {
-        
         let json = data.data(using: .utf8)!
         let decoder = JSONDecoder()
+        
+        var dataChanged = false
 
         do {
             var message: Decodable!
@@ -178,12 +190,15 @@ class ProPresenterService: WebSocketDelegate {
                 }
             case .sys(let rawMessage):
                 message = rawMessage
-                print(rawMessage)
+                messageSystem = rawMessage
+                systemTime = rawMessage.timeString
+                syphonServer?.setMessage6(rawMessage)
             case .tmr(let rawMessage):
                 message = rawMessage
                 print(rawMessage)
             case .fv(let rawMessage):
-                message = rawMessage
+                extractFrames(frames: rawMessage.ary)
+                dataChanged = true
             case .cs(let rawMessage):
                 message = rawMessage
             case .ns(let rawMessage):
@@ -196,7 +211,7 @@ class ProPresenterService: WebSocketDelegate {
                 message = rawMessage
                 if currentStageDisplayLayout?.uid != rawMessage.uid {
                     currentStageDisplayLayout = rawMessage
-                    triggerRedraw()
+                    dataChanged
                 }
             case .psl(let rawMessage):
                 message = rawMessage
@@ -206,7 +221,7 @@ class ProPresenterService: WebSocketDelegate {
                     }.first
                     if currentStageDisplayLayout?.uid != newLayout?.uid {
                         currentStageDisplayLayout = newLayout
-                        triggerRedraw()
+                        requestFrameValues(newLayout!.uid)
                     }
                 }
             case .asl(let rawMessage):
@@ -214,9 +229,17 @@ class ProPresenterService: WebSocketDelegate {
                 allStageDisplayLayouts = rawMessage
             case .msg(let rawMessage):
                 message = rawMessage
+                syphonServer?.setMessage5(rawMessage)
+            case .vid(let rawMessage):
+                message = rawMessage
+            case .cc(let rawMessage):
+                message = rawMessage
             }
             if let message = message {
 //                print(message)
+            }
+            if dataChanged {
+                triggerRedraw()
             }
         } catch {
             print("error occurred decoding: \(error)")
@@ -233,16 +256,39 @@ class ProPresenterService: WebSocketDelegate {
     }
     
     func triggerRedraw() {
+        // ensure redraw is not in progress before
         syphonServer?.newFrame()
         
         if let currentStageDisplayLayout = currentStageDisplayLayout {
             currentStageDisplayLayout.fme.forEach { frame in
-                self.syphonServer?.addToFrame(frame: frame.frame)
+                self.syphonServer?.addToFrame(frame: frame)
             }
         }
         
         DispatchQueue.main.async {
             self.syphonServer?.renderFrame()
+        }
+    }
+    
+    func extractFrames(frames: [ProPresenterMessage]) {
+        for frame in frames {
+//            print(frame)
+            switch frame {
+            case .cs(let currentSlide):
+                syphonServer?.setMessage1(currentSlide)
+                break
+            case .ns(let nextSlide):
+                syphonServer?.setMessage2(nextSlide)
+                break
+            case .csn(let currentSlideNote):
+                syphonServer?.setMessage3(currentSlideNote)
+                break
+            case .nsn(let nextSlideNote):
+                syphonServer?.setMessage4(nextSlideNote)
+                break
+            default:
+                break
+            }
         }
     }
 }

@@ -20,6 +20,8 @@ enum MessageType: String, Decodable {
     case asl
     case psl
     case msg
+    case vid
+    case cc
 }
 
 struct ProPresenterAuth: Codable {
@@ -31,6 +33,26 @@ struct ProPresenterAuth: Codable {
 struct ProPresenterSystem: Codable {
     var acn: MessageType { .sys }
     var txt: String
+    
+    var dateString: String {
+        return txt.trimmingCharacters(in: .whitespacesAndNewlines)
+    }
+    
+    var time: Date {
+        let dateFormatter = DateFormatter()
+        dateFormatter.dateFormat = "h:mm a"
+        dateFormatter.locale = Locale(identifier: "en_US_POSIX") // fixes nil if device time in 24 hour format
+        return dateFormatter.date(from: dateString) ?? Date()
+
+//        dateFormatter.dateFormat = "HH:mm"
+//        let date24 = dateFormatter.string(from: date!)
+    }
+    
+    var timeString: String {
+        let dateFormatter = DateFormatter()
+        dateFormatter.dateFormat = "HH:mm"
+        return dateFormatter.string(from: time)
+    }
 }
 
 struct ProPresenterTimer: Codable {
@@ -92,12 +114,19 @@ struct ProPresenterStageDisplayFrame: Codable {
     var mde: Int
 //    var tAl: Int
 //    var tCl: String
-//    var tSz: Int
+    var tSz: Int?
     var nme: String
     var typ: Int // make this an enum and create custom frames
 //    var fCl: String
 //    var fCh: Bool
 //    var uid: String
+    
+    var textSize: Int {
+        if let tSz = tSz {
+            return tSz
+        }
+        return 0
+    }
     
     var frameGeometry: [String] {
         return ufr.dropFirst(2).dropLast(2).description.components(separatedBy: "}, {")
@@ -109,6 +138,10 @@ struct ProPresenterStageDisplayFrame: Codable {
     
     var frame: (x: Int, y: Int, width: Int, height: Int) {
         return frameRect.getFrame
+    }
+    
+    var cgRect: CGRect {
+        return frameRect.frameRect
     }
     
     var lowerLeftX: Float {
@@ -175,6 +208,16 @@ struct ProPresenterMessageValue: Codable {
     var txt: String
 }
 
+struct ProPresenterVideoTimer: Codable {
+    var acn: MessageType { .vid }
+    var txt: String
+}
+
+struct ProPresenterChordChart: Codable {
+    var acn: MessageType { .cc }
+    var uid: String
+}
+
 enum ProPresenterMessage {
     case ath(ProPresenterAuth)
     case sys(ProPresenterSystem)
@@ -188,6 +231,8 @@ enum ProPresenterMessage {
     case asl(ProPresenterAllStageLayout)
     case psl(ProPresenterCurrentStageLayout)
     case msg(ProPresenterMessageValue)
+    case vid(ProPresenterVideoTimer)
+    case cc(ProPresenterChordChart)
 }
 
 extension ProPresenterMessage: Decodable {
@@ -228,6 +273,10 @@ extension ProPresenterMessage: Decodable {
             self = .psl(try ProPresenterCurrentStageLayout(from: decoder))
         case "msg":
             self = .msg(try ProPresenterMessageValue(from: decoder))
+        case "vid":
+            self = .vid(try ProPresenterVideoTimer(from: decoder))
+        case "cc":
+            self = .cc(try ProPresenterChordChart(from: decoder))
         default:
             throw InvalidTypeError(acn: acn)
         }
@@ -265,5 +314,9 @@ class FrameRect {
     var getFrame: (x: Int, y: Int, width: Int, height: Int) {
         let y = self.displayHeight - (self.bottom - self.top + self.height)
         return (x: Int(self.left), y: Int(y), width: Int(self.width), height: Int(self.height))
+    }
+    
+    var frameRect: CGRect {
+        return CGRect(x: getFrame.x, y: getFrame.y, width: getFrame.width, height: getFrame.height)
     }
 }
