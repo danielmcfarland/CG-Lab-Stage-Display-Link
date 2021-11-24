@@ -193,6 +193,7 @@ class ProPresenterService: WebSocketDelegate {
                 messageSystem = rawMessage
                 systemTime = rawMessage.timeString
                 syphonServer?.setMessage6(rawMessage)
+                dataChanged = true
             case .tmr(let rawMessage):
                 message = rawMessage
                 print(rawMessage)
@@ -211,7 +212,7 @@ class ProPresenterService: WebSocketDelegate {
                 message = rawMessage
                 if currentStageDisplayLayout?.uid != rawMessage.uid {
                     currentStageDisplayLayout = rawMessage
-                    dataChanged
+                    dataChanged = true
                 }
             case .psl(let rawMessage):
                 message = rawMessage
