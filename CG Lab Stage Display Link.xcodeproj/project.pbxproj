@@ -7,6 +7,8 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		681A682D274F950400935A13 /* Syphon.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 681A682B274F950000935A13 /* Syphon.framework */; };
+		681A682E274F950400935A13 /* Syphon.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 681A682B274F950000935A13 /* Syphon.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		685692BD2743A840006F841E /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 685692BC2743A840006F841E /* AppDelegate.swift */; };
 		685692BF2743A840006F841E /* ViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 685692BE2743A840006F841E /* ViewController.swift */; };
 		685692C12743A84D006F841E /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 685692C02743A84D006F841E /* Assets.xcassets */; };
@@ -14,8 +16,6 @@
 		685692CC27442EE1006F841E /* ProPresenterService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 685692CB27442EE1006F841E /* ProPresenterService.swift */; };
 		685692CF27442F95006F841E /* Starscream in Frameworks */ = {isa = PBXBuildFile; productRef = 685692CE27442F95006F841E /* Starscream */; };
 		685692D127453EF0006F841E /* ProPresenterMessage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 685692D027453EF0006F841E /* ProPresenterMessage.swift */; };
-		685692D427493013006F841E /* Syphon.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 685692D227493009006F841E /* Syphon.framework */; };
-		685692D527493013006F841E /* Syphon.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 685692D227493009006F841E /* Syphon.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		685692D827493050006F841E /* SyphonService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 685692D727493050006F841E /* SyphonService.swift */; };
 		685692DA27493149006F841E /* MacGraphicsImageRenderer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 685692D927493149006F841E /* MacGraphicsImageRenderer.swift */; };
 /* End PBXBuildFile section */
@@ -27,7 +27,7 @@
 			dstPath = "";
 			dstSubfolderSpec = 10;
 			files = (
-				685692D527493013006F841E /* Syphon.framework in Embed Frameworks */,
+				681A682E274F950400935A13 /* Syphon.framework in Embed Frameworks */,
 			);
 			name = "Embed Frameworks";
 			runOnlyForDeploymentPostprocessing = 0;
@@ -35,6 +35,7 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		681A682B274F950000935A13 /* Syphon.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; path = Syphon.framework; sourceTree = "<group>"; };
 		685692B92743A840006F841E /* CG Lab Stage Display Link.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "CG Lab Stage Display Link.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		685692BC2743A840006F841E /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		685692BE2743A840006F841E /* ViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewController.swift; sourceTree = "<group>"; };
@@ -43,7 +44,6 @@
 		685692C52743A84D006F841E /* CG_Lab_Stage_Display_Link.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = CG_Lab_Stage_Display_Link.entitlements; sourceTree = "<group>"; };
 		685692CB27442EE1006F841E /* ProPresenterService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProPresenterService.swift; sourceTree = "<group>"; };
 		685692D027453EF0006F841E /* ProPresenterMessage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProPresenterMessage.swift; sourceTree = "<group>"; };
-		685692D227493009006F841E /* Syphon.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; path = Syphon.framework; sourceTree = "<group>"; };
 		685692D727493050006F841E /* SyphonService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SyphonService.swift; sourceTree = "<group>"; };
 		685692D927493149006F841E /* MacGraphicsImageRenderer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MacGraphicsImageRenderer.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -54,7 +54,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				685692CF27442F95006F841E /* Starscream in Frameworks */,
-				685692D427493013006F841E /* Syphon.framework in Frameworks */,
+				681A682D274F950400935A13 /* Syphon.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -89,7 +89,7 @@
 				685692C02743A84D006F841E /* Assets.xcassets */,
 				685692C22743A84D006F841E /* Main.storyboard */,
 				685692C52743A84D006F841E /* CG_Lab_Stage_Display_Link.entitlements */,
-				685692D227493009006F841E /* Syphon.framework */,
+				681A682B274F950000935A13 /* Syphon.framework */,
 			);
 			path = "CG Lab Stage Display Link";
 			sourceTree = "<group>";
@@ -324,6 +324,8 @@
 					"$(inherited)",
 					"$(PROJECT_DIR)/CG\\ Lab\\ Stage\\ Display\\ Link",
 					"$(PROJECT_DIR)/CG\\ Lab\\ Stage\\ Display\\ Link",
+					"$(PROJECT_DIR)/CG\\ Lab\\ Stage\\ Display\\ Link",
+					"$(PROJECT_DIR)/CG\\ Lab\\ Stage\\ Display\\ Link",
 				);
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
@@ -355,6 +357,8 @@
 				ENABLE_HARDENED_RUNTIME = YES;
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(inherited)",
+					"$(PROJECT_DIR)/CG\\ Lab\\ Stage\\ Display\\ Link",
+					"$(PROJECT_DIR)/CG\\ Lab\\ Stage\\ Display\\ Link",
 					"$(PROJECT_DIR)/CG\\ Lab\\ Stage\\ Display\\ Link",
 					"$(PROJECT_DIR)/CG\\ Lab\\ Stage\\ Display\\ Link",
 				);

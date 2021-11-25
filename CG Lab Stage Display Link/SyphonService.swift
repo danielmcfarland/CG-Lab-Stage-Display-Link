@@ -74,7 +74,9 @@ class SyphonService {
                 previousFrameImage = currentFrameImage
                 currentTexture = try textureLoader.newTexture(cgImage: currentFrameImage)
             }
-            syphonServer?.publishFrameTexture(currentTexture)
+
+            let rect = NSRect(x: 0, y: 0, width: currentFrameImage.width, height: currentFrameImage.height)
+            syphonServer?.publishFrameTexture(currentTexture, imageRegion: rect, flip: false)
         } catch {
             print("error")
         }
