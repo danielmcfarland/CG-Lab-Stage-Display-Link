@@ -196,7 +196,8 @@ class ProPresenterService: WebSocketDelegate {
                 dataChanged = true
             case .tmr(let rawMessage):
                 message = rawMessage
-                print(rawMessage)
+                syphonServer?.setMessage7(rawMessage)
+                dataChanged = true
             case .fv(let rawMessage):
                 extractFrames(frames: rawMessage.ary)
                 dataChanged = true
@@ -274,7 +275,6 @@ class ProPresenterService: WebSocketDelegate {
     
     func extractFrames(frames: [ProPresenterMessage]) {
         for frame in frames {
-//            print(frame)
             switch frame {
             case .cs(let currentSlide):
                 syphonServer?.setMessage1(currentSlide)

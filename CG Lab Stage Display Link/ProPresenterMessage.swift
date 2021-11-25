@@ -119,7 +119,7 @@ struct ProPresenterStageDisplayFrame: Codable {
     var typ: Int // make this an enum and create custom frames
 //    var fCl: String
 //    var fCh: Bool
-//    var uid: String
+    var uid: String?
     
     var textSize: Int {
         if let tSz = tSz {

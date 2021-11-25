@@ -16,22 +16,17 @@ class SyphonService {
     
     var displayLink: CVDisplayLink?
     var metalDevice: MTLDevice? = MTLCreateSystemDefaultDevice()
-    var context: CIContext?
+    var textureLoader: MTKTextureLoader?
     
-    private var textureCache: CVMetalTextureCache?
     var syphonServer: SyphonMetalServer?
     private var currentTexture: MTLTexture!
-    
-    var currentFrame: CIImage!
+
+    var currentFrameImage: CGImage?
+    var previousFrameImage: CGImage?
     
     var globalFormat = GraphicsImageRendererFormat()
     var globalRenderer: GraphicsImageRenderer!
     var globalContext: GraphicsImageRendererContext!
-    var mtkView: MTKView!
-    
-    private var pixelBuffer: CVPixelBuffer?
-    private var targetTexture: MTLTexture!
-    private var textureWrapper: CVMetalTexture?
     
     var frames: [(ProPresenterStageDisplayFrame)]! = []
     
@@ -41,6 +36,9 @@ class SyphonService {
     private var message4: ProPresenterNextSlideNote?
     private var message5: ProPresenterMessageValue?
     private var message6: ProPresenterSystem?
+    private var message7: [String: String] = [:]
+    private var message8: ProPresenterVideoTimer?
+    private var message9: ProPresenterChordChart?
     
     init() {
         globalFormat.scale = 1
@@ -49,7 +47,6 @@ class SyphonService {
         setupRenderer()
         renderFrame()
         
-        CVMetalTextureCacheCreate(nil, nil, metalDevice!, nil, &textureCache)
         syphonServer = SyphonMetalServer(name: "Video", device: metalDevice!)
         
         CVDisplayLinkCreateWithActiveCGDisplays(&displayLink)
@@ -65,43 +62,36 @@ class SyphonService {
     
     func initOutput() {
         if let metalDevice = metalDevice {
-            context = CIContext(mtlDevice: metalDevice)
+            textureLoader = MTKTextureLoader(device: metalDevice)
         }
-        
-        mtkView = MTKView()
-        
-        let attrs = [
-            kCVPixelBufferCGImageCompatibilityKey: kCFBooleanTrue,
-            kCVPixelBufferCGBitmapContextCompatibilityKey: kCFBooleanTrue,
-            kCVPixelBufferMetalCompatibilityKey: kCFBooleanTrue
-        ]
-        
-        let status = CVPixelBufferCreate(nil, Int(1920), Int(1080), kCVPixelFormatType_32BGRA, attrs as CFDictionary, &pixelBuffer)
-        
-        assert(status == noErr)
     }
     
     func generateOutput() {
         let startTime = Date().timeIntervalSince1970 * 1_000_000
-        guard let rectangleImage = currentFrame
-        else { return }
         
-        guard let context = context else { return }
-        
-        context.render(rectangleImage, to: pixelBuffer!)
+        guard let textureLoader = textureLoader else { return }
 
-        guard let textureCache = textureCache else { return }
+        guard let currentFrameImage = currentFrameImage else { return }
+        var newFrame = false
         
-        let width = CVPixelBufferGetWidth(pixelBuffer!)
-        let height = CVPixelBufferGetHeight(pixelBuffer!)
+        do {
+            if currentFrameImage != previousFrameImage {
+                previousFrameImage = currentFrameImage
+                currentTexture = try textureLoader.newTexture(cgImage: currentFrameImage)
+                newFrame = true
+            }
+            
+            
+            syphonServer?.publishFrameTexture(currentTexture)
         
-        _ = CVMetalTextureCacheCreateTextureFromImage(kCFAllocatorDefault, textureCache, pixelBuffer!, nil, .bgra8Unorm, width, height, 0, &textureWrapper)
+        } catch {
+            print("error")
+        }
         
-        let sourceTexture = CVMetalTextureGetTexture(textureWrapper!)!
-        
-        syphonServer?.publishFrameTexture(sourceTexture)
         let endTime = Date().timeIntervalSince1970 * 1_000_000
-        print("Total Output Time: \(endTime - startTime) microseconds")
+        if newFrame {
+            print("Total Output Time: \(endTime - startTime) microseconds")
+        }
     }
     
     func setupRenderer() {
@@ -158,6 +148,11 @@ class SyphonService {
                         self.drawText(frame: frame.cgRect, text: message6.timeString, context: context.cgContext, fontSize: fontSize)
                     }
                     break
+                case 7:
+                    if let timerId = frame.uid, let timerValue = self.message7[timerId], let fontSize = frame.tSz {
+                        self.drawText(frame: frame.cgRect, text: timerValue, context: context.cgContext, fontSize: fontSize)
+                    }
+                    break
                 default:
 
                     break
@@ -170,7 +165,18 @@ class SyphonService {
     }
     
     func renderFrame() -> Void {
-        currentFrame = getFrame().ciImage()
+        if let cgImage = cgImage {
+            currentFrameImage = cgImage
+        }
+    }
+    
+    var cgImage: CGImage? {
+        let startTime = Date().timeIntervalSince1970 * 1_000_000
+        let image = getFrame()
+        let cgImage = image.cgImage(forProposedRect: nil, context: nil, hints: nil)
+        let endTime = Date().timeIntervalSince1970 * 1_000_000
+        print("Total CGImage Time: \(endTime - startTime) microseconds")
+        return cgImage
     }
     
     func drawText(frame: CGRect, text: String, context: CGContext) {
@@ -230,6 +236,10 @@ class SyphonService {
     
     func setMessage6(_ message: ProPresenterSystem) {
         message6 = message
+    }
+    
+    func setMessage7(_ message: ProPresenterTimer) {
+        message7[message.uid] = message.txt
     }
 }
 
