@@ -14,21 +14,21 @@ import MetalKit
 
 class SyphonService {
     
-    var displayLink: CVDisplayLink?
-    var metalDevice: MTLDevice? = MTLCreateSystemDefaultDevice()
-    var textureLoader: MTKTextureLoader?
+    private var displayLink: CVDisplayLink?
+    private var metalDevice: MTLDevice? = MTLCreateSystemDefaultDevice()
+    private var textureLoader: MTKTextureLoader?
     
-    var syphonServer: SyphonMetalServer?
+    private var syphonServer: SyphonMetalServer?
     private var currentTexture: MTLTexture!
 
-    var currentFrameImage: CGImage?
-    var previousFrameImage: CGImage?
+    private var currentFrameImage: CGImage?
+    private var previousFrameImage: CGImage?
     
-    var globalFormat = GraphicsImageRendererFormat()
-    var globalRenderer: GraphicsImageRenderer!
-    var globalContext: GraphicsImageRendererContext!
+    private var globalFormat = GraphicsImageRendererFormat()
+    private var globalRenderer: GraphicsImageRenderer!
+    private var globalContext: GraphicsImageRendererContext!
     
-    var frames: [(ProPresenterStageDisplayFrame)]! = []
+    private var frames: [(ProPresenterStageDisplayFrame)]! = []
     
     private var message1: ProPresenterCurrentSlide?
     private var message2: ProPresenterNextSlide?
@@ -67,30 +67,16 @@ class SyphonService {
     }
     
     func generateOutput() {
-        let startTime = Date().timeIntervalSince1970 * 1_000_000
-        
-        guard let textureLoader = textureLoader else { return }
-
-        guard let currentFrameImage = currentFrameImage else { return }
-        var newFrame = false
+        guard let textureLoader = textureLoader, let currentFrameImage = currentFrameImage else { return }
         
         do {
             if currentFrameImage != previousFrameImage {
                 previousFrameImage = currentFrameImage
                 currentTexture = try textureLoader.newTexture(cgImage: currentFrameImage)
-                newFrame = true
             }
-            
-            
             syphonServer?.publishFrameTexture(currentTexture)
-        
         } catch {
             print("error")
-        }
-        
-        let endTime = Date().timeIntervalSince1970 * 1_000_000
-        if newFrame {
-            print("Total Output Time: \(endTime - startTime) microseconds")
         }
     }
     
@@ -107,7 +93,6 @@ class SyphonService {
     }
     
     func getFrame() -> NSImage {
-        let startTime = Date().timeIntervalSince1970 * 1_000_000
         let color = NSColor(deviceRed: 0.99, green: 0.8, blue: 0.00, alpha: 1.00).cgColor
         
         let frameImage = globalRenderer.image { context in
@@ -159,8 +144,6 @@ class SyphonService {
                 }
             }
         }
-        let endTime = Date().timeIntervalSince1970 * 1_000_000
-        print("Total Frame Render Time: \(endTime - startTime) microseconds")
         return frameImage
     }
     
@@ -171,12 +154,8 @@ class SyphonService {
     }
     
     var cgImage: CGImage? {
-        let startTime = Date().timeIntervalSince1970 * 1_000_000
         let image = getFrame()
-        let cgImage = image.cgImage(forProposedRect: nil, context: nil, hints: nil)
-        let endTime = Date().timeIntervalSince1970 * 1_000_000
-        print("Total CGImage Time: \(endTime - startTime) microseconds")
-        return cgImage
+        return image.cgImage(forProposedRect: nil, context: nil, hints: nil)
     }
     
     func drawText(frame: CGRect, text: String, context: CGContext) {
@@ -248,9 +227,7 @@ extension NSFont {
         let properBounds = CGRect(origin: .zero, size: bounds.size)
         var attributes: [NSAttributedString.Key: Any] = [:]
         
-        guard let font = font else {
-            return 0
-        }
+        guard let font = font else { return 0 }
         
         let fontDescriptor = font.fontDescriptor
         let startingSize = fontSize * 2
