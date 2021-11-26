@@ -40,6 +40,8 @@ class SyphonService {
     private var message8: ProPresenterVideoTimer?
     private var message9: ProPresenterChordChart?
     
+    private var hasBorders: Bool?
+    
     init() {
         globalFormat.scale = 1
         
@@ -94,16 +96,25 @@ class SyphonService {
         frames.append(frame)
     }
     
+    func setBorders(_ borders: Bool) {
+        hasBorders = borders
+    }
+    
     func getFrame() -> NSImage {
         let color = NSColor(deviceRed: 0.99, green: 0.8, blue: 0.00, alpha: 1.00).cgColor
         
         let frameImage = globalRenderer.image { context in
             
             for frame in self.frames {
-                context.cgContext.setStrokeColor(color)
-                context.cgContext.setLineWidth(1)
-                context.cgContext.addRect(frame.cgRect)
-                context.cgContext.drawPath(using: .stroke)
+                if let hasBorders = self.hasBorders {
+                    if hasBorders {
+                        context.cgContext.setStrokeColor(color)
+                        context.cgContext.setLineWidth(1)
+                        context.cgContext.addRect(frame.cgRect)
+                        context.cgContext.drawPath(using: .stroke)
+                    }
+                }
+                
                 switch frame.typ {
                 case 1:
                     if let message1 = self.message1, let fontSize = frame.tSz {
@@ -150,14 +161,8 @@ class SyphonService {
     }
     
     func renderFrame() -> Void {
-        if let cgImage = cgImage {
-            currentFrameImage = cgImage
-        }
-    }
-    
-    var cgImage: CGImage? {
         let image = getFrame()
-        return image.cgImage(forProposedRect: nil, context: nil, hints: nil)
+        currentFrameImage = image.cgImage(forProposedRect: nil, context: nil, hints: nil)
     }
     
     func drawText(frame: CGRect, text: String, context: CGContext) {

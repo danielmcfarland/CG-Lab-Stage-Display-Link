@@ -23,9 +23,11 @@ class ProPresenterService: WebSocketDelegate {
     private var request: URLRequest!
     private let nc = NotificationCenter.default
     private var timer: Timer?
+    private var renderTimer: Timer?
     private var syphonServer: SyphonService?
     
-    private var currentStageDisplayLayout: ProPresenterStageLayout?
+    private var currentLayout: ProPresenterCurrentStageLayout?
+//    private var currentStageDisplayLayout: ProPresenterStageLayout?
     private var allStageDisplayLayouts: ProPresenterAllStageLayout?
     
     private var systemTime: String?
@@ -37,6 +39,15 @@ class ProPresenterService: WebSocketDelegate {
         DispatchQueue.main.async {
             self.syphonServer = SyphonService()
         }
+    }
+    
+    var currentStageDisplayLayout: ProPresenterStageLayout? {
+        if let allStageDisplayLayouts = allStageDisplayLayouts, let currentLayout = currentLayout {
+            return allStageDisplayLayouts.ary.filter {
+                $0.uid == currentLayout.uid
+            }.first
+        }
+        return nil
     }
     
     var socket: WebSocket!
@@ -181,12 +192,13 @@ class ProPresenterService: WebSocketDelegate {
             case .ath(let rawMessage):
                 if rawMessage.ath {
                     if connectionStatus != .connected {
-                        timer = Timer.scheduledTimer(timeInterval: 10, target: self, selector: #selector(checkConnection), userInfo: nil, repeats: true)
+                        timer = Timer.scheduledTimer(timeInterval: 1, target: self, selector: #selector(checkConnection), userInfo: nil, repeats: true)
                         connectionStatus = .connected
                         notifyStatus()
-                        allStageLayouts()
-                        currentStageLayout()
                     }
+                    allStageLayouts()
+                    currentStageLayout()
+                    dataChanged = true
                 }
             case .sys(let rawMessage):
                 message = rawMessage
@@ -211,21 +223,13 @@ class ProPresenterService: WebSocketDelegate {
                 message = rawMessage
             case .sl(let rawMessage):
                 message = rawMessage
-                if currentStageDisplayLayout?.uid != rawMessage.uid {
-                    currentStageDisplayLayout = rawMessage
-                    dataChanged = true
-                }
+                currentLayout = ProPresenterCurrentStageLayout(uid: rawMessage.uid)
+                dataChanged = true
             case .psl(let rawMessage):
                 message = rawMessage
-                if let allStageDisplayLayouts = allStageDisplayLayouts {
-                    let newLayout = allStageDisplayLayouts.ary.filter {
-                        $0.uid == rawMessage.uid
-                    }.first
-                    if currentStageDisplayLayout?.uid != newLayout?.uid {
-                        currentStageDisplayLayout = newLayout
-                        requestFrameValues(newLayout!.uid)
-                    }
-                }
+                currentLayout = rawMessage
+                requestFrameValues(currentLayout!.uid)
+                dataChanged = true
             case .asl(let rawMessage):
                 message = rawMessage
                 allStageDisplayLayouts = rawMessage
@@ -263,13 +267,17 @@ class ProPresenterService: WebSocketDelegate {
         syphonServer?.newFrame()
         
         if let currentStageDisplayLayout = currentStageDisplayLayout {
+            self.syphonServer?.setBorders(currentStageDisplayLayout.brd)
             currentStageDisplayLayout.fme.forEach { frame in
                 self.syphonServer?.addToFrame(frame: frame)
             }
         }
         
-        DispatchQueue.main.async {
-            self.syphonServer?.renderFrame()
+        self.renderTimer?.invalidate()
+        self.renderTimer = Timer.scheduledTimer(withTimeInterval: 0.25, repeats: false) { _ in
+            DispatchQueue.main.async {
+                self.syphonServer?.renderFrame()
+            }
         }
     }
     

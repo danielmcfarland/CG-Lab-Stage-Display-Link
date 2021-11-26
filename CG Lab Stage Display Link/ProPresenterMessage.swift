@@ -88,7 +88,30 @@ struct ProPresenterNextSlideNote: Codable {
     var txt: String
 }
 
-struct ProPresenterStageLayout: Decodable {
+struct ProPresenterStageLayout: Decodable, Equatable {
+    
+    static func == (lhs: ProPresenterStageLayout, rhs: ProPresenterStageLayout) -> Bool {
+        if lhs.nme != rhs.nme {
+            return false
+        }
+        if lhs.brd != rhs.brd {
+            return false
+        }
+        if lhs.uid != rhs.uid {
+            return false
+        }
+        if lhs.zro != rhs.zro {
+            return false
+        }
+        if lhs.ovr != rhs.ovr {
+            return false
+        }
+        if lhs.oCl != rhs.oCl {
+            return false
+        }
+        return true
+    }
+    
     var acn: MessageType { .sl }
     var nme: String
     var brd: Bool
