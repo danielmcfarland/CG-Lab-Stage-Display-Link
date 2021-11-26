@@ -25,6 +25,9 @@ class ViewController: NSViewController {
             switch status {
             case .connected:
                 proPresenterService.disconnect()
+                UserDefaults().set(connectionServer.stringValue, forKey: "connectionServer")
+                UserDefaults().set(connectionPort.stringValue, forKey: "connectionPort")
+                UserDefaults().set(connectionPassword.stringValue, forKey: "connectionPassword")
             case .connecting:
                 print("connecting - do nothing - potentially cancel")
             case .disconnected:
@@ -36,6 +39,16 @@ class ViewController: NSViewController {
                 print("connecting - do nothing")
             }
         }
+    }
+    
+    override func viewWillAppear() {
+        super.viewWillAppear()
+        
+        // Do any additional setup before loading the view.
+        
+        connectionServer.stringValue = UserDefaults().string(forKey: "connectionServer") ?? "127.0.0.1"
+        connectionPort.stringValue = UserDefaults().string(forKey: "connectionPort") ?? "54235"
+        connectionPassword.stringValue = UserDefaults().string(forKey: "connectionPassword") ?? ""
     }
     
     override func viewDidLoad() {
