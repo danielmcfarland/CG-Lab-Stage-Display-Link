@@ -101,59 +101,79 @@ class SyphonService {
     }
     
     func getFrame() -> NSImage {
-        let color = NSColor(deviceRed: 0.99, green: 0.8, blue: 0.00, alpha: 1.00).cgColor
+        let color = NSColor(deviceRed: 0.75, green: 0.75, blue: 0.75, alpha: 1.00).cgColor
         
         let frameImage = globalRenderer.image { context in
             
             for frame in self.frames {
+                var frameRect = frame.cgRect
+                
                 if let hasBorders = self.hasBorders {
                     if hasBorders {
+                        
+                        let titleRect = CGRect(x: frameRect.origin.x, y: frameRect.origin.y, width: frameRect.width, height: 20)
+                        let titleTextRect = CGRect(x: frameRect.origin.x + 5, y: frameRect.origin.y, width: frameRect.width - 10, height: 20)
+                        context.cgContext.setFillColor(color)
+                        context.cgContext.setStrokeColor(color)
+                        context.cgContext.setLineWidth(1)
+                        context.cgContext.addRect(titleRect)
+                        context.cgContext.drawPath(using: .fillStroke)
+
+                        self.drawText(frame: titleTextRect, text: frame.nme, context: context.cgContext, fontSize: 30, color: NSColor.black, alignment: .left)
+                        
                         context.cgContext.setStrokeColor(color)
                         context.cgContext.setLineWidth(1)
                         context.cgContext.addRect(frame.cgRect)
                         context.cgContext.drawPath(using: .stroke)
+                        
+                        let originX = frameRect.origin.x
+                        let originY = frameRect.origin.y + 20
+                        let width = frameRect.width
+                        let height = frameRect.height - 20
+                        
+                        frameRect = CGRect(x: originX, y: originY, width: width, height: height)
                     }
                 }
                 
                 switch frame.typ {
                 case 1:
                     if let message1 = self.message1, let fontSize = frame.tSz {
-                        self.drawText(frame: frame.cgRect, text: message1.txt, context: context.cgContext, fontSize: fontSize, color: frame.textColor)
+                        self.drawText(frame: frameRect, text: message1.txt, context: context.cgContext, fontSize: fontSize, color: frame.textColor)
                     }
                     break
                 case 2:
                     if let message2 = self.message2, let fontSize = frame.tSz {
-                        self.drawText(frame: frame.cgRect, text: message2.txt, context: context.cgContext, fontSize: fontSize, color: frame.textColor)
+                        self.drawText(frame: frameRect, text: message2.txt, context: context.cgContext, fontSize: fontSize, color: frame.textColor)
                     }
                     break
                 case 3:
                     if let message3 = self.message3, let fontSize = frame.tSz {
-                        self.drawText(frame: frame.cgRect, text: message3.txt, context: context.cgContext, fontSize: fontSize, color: frame.textColor)
+                        self.drawText(frame: frameRect, text: message3.txt, context: context.cgContext, fontSize: fontSize, color: frame.textColor)
                     }
                     break
                 case 4:
                     if let message4 = self.message4, let fontSize = frame.tSz {
-                        self.drawText(frame: frame.cgRect, text: message4.txt, context: context.cgContext, fontSize: fontSize, color: frame.textColor)
+                        self.drawText(frame: frameRect, text: message4.txt, context: context.cgContext, fontSize: fontSize, color: frame.textColor)
                     }
                     break
                 case 5:
                     if let message5 = self.message5, let fontSize = frame.tSz {
-                        self.drawText(frame: frame.cgRect, text: message5.txt, context: context.cgContext, fontSize: fontSize, color: frame.textColor)
+                        self.drawText(frame: frameRect, text: message5.txt, context: context.cgContext, fontSize: fontSize, color: frame.textColor)
                     }
                     break
                 case 6:
                     if let message6 = self.message6, let fontSize = frame.tSz {
-                        self.drawText(frame: frame.cgRect, text: message6.timeString, context: context.cgContext, fontSize: fontSize, color: frame.textColor)
+                        self.drawText(frame: frameRect, text: message6.timeString, context: context.cgContext, fontSize: fontSize, color: frame.textColor)
                     }
                     break
                 case 7:
                     if let timerId = frame.uid, let timerValue = self.message7[timerId], let fontSize = frame.tSz {
-                        self.drawText(frame: frame.cgRect, text: timerValue, context: context.cgContext, fontSize: fontSize, color: frame.textColor)
+                        self.drawText(frame: frameRect, text: timerValue, context: context.cgContext, fontSize: fontSize, color: frame.textColor)
                     }
                     break
                 case 8:
                     if let message8 = self.message8, let fontSize = frame.tSz {
-                        self.drawText(frame: frame.cgRect, text: message8.txt, context: context.cgContext, fontSize: fontSize, color: frame.textColor)
+                        self.drawText(frame: frameRect, text: message8.txt, context: context.cgContext, fontSize: fontSize, color: frame.textColor)
                     }
                     break
                 default:
@@ -179,12 +199,16 @@ class SyphonService {
     }
     
     func drawText(frame: CGRect, text: String, context: CGContext, fontSize: Int, color: NSColor) {
-        drawText(frame: frame, text: text, context: context, fontSize: CGFloat(fontSize), color: color)
+        drawText(frame: frame, text: text, context: context, fontSize: CGFloat(fontSize), color: color, alignment: .center)
     }
     
     func drawText(frame: CGRect, text: String, context: CGContext, fontSize: CGFloat, color: NSColor) {
+        drawText(frame: frame, text: text, context: context, fontSize: fontSize, color: color, alignment: .center)
+    }
+    
+    func drawText(frame: CGRect, text: String, context: CGContext, fontSize: CGFloat, color: NSColor, alignment: NSTextAlignment) {
         let paragraphStyle = NSMutableParagraphStyle()
-        paragraphStyle.alignment = .center
+        paragraphStyle.alignment = alignment
         
         let textFrame = CGRect(x: 0, y: 0, width: frame.width, height: frame.height)
         var currentFont = NSFont(name: "HelveticaNeue-Bold", size: fontSize)

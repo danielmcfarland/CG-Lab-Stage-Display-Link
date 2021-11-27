@@ -136,13 +136,13 @@ struct ProPresenterCurrentStageLayout: Codable {
 struct ProPresenterStageDisplayFrame: Codable {
     var ufr: String
     var mde: Int
-//    var tAl: Int
+//    var tAl: Int // always 2 - not required
     var tCl: String?
     var tSz: Int?
     var nme: String
     var typ: Int // make this an enum and create custom frames
-//    var fCl: String
-//    var fCh: Bool
+//    var fCl: String // flash message color
+//    var fCh: Bool // use flash message
     var uid: String?
     
     var textSize: Int {
