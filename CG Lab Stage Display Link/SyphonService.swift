@@ -118,37 +118,37 @@ class SyphonService {
                 switch frame.typ {
                 case 1:
                     if let message1 = self.message1, let fontSize = frame.tSz {
-                        self.drawText(frame: frame.cgRect, text: message1.txt, context: context.cgContext, fontSize: fontSize)
+                        self.drawText(frame: frame.cgRect, text: message1.txt, context: context.cgContext, fontSize: fontSize, color: frame.textColor)
                     }
                     break
                 case 2:
                     if let message2 = self.message2, let fontSize = frame.tSz {
-                        self.drawText(frame: frame.cgRect, text: message2.txt, context: context.cgContext, fontSize: fontSize)
+                        self.drawText(frame: frame.cgRect, text: message2.txt, context: context.cgContext, fontSize: fontSize, color: frame.textColor)
                     }
                     break
                 case 3:
                     if let message3 = self.message3, let fontSize = frame.tSz {
-                        self.drawText(frame: frame.cgRect, text: message3.txt, context: context.cgContext, fontSize: fontSize)
+                        self.drawText(frame: frame.cgRect, text: message3.txt, context: context.cgContext, fontSize: fontSize, color: frame.textColor)
                     }
                     break
                 case 4:
                     if let message4 = self.message4, let fontSize = frame.tSz {
-                        self.drawText(frame: frame.cgRect, text: message4.txt, context: context.cgContext, fontSize: fontSize)
+                        self.drawText(frame: frame.cgRect, text: message4.txt, context: context.cgContext, fontSize: fontSize, color: frame.textColor)
                     }
                     break
                 case 5:
                     if let message5 = self.message5, let fontSize = frame.tSz {
-                        self.drawText(frame: frame.cgRect, text: message5.txt, context: context.cgContext, fontSize: fontSize)
+                        self.drawText(frame: frame.cgRect, text: message5.txt, context: context.cgContext, fontSize: fontSize, color: frame.textColor)
                     }
                     break
                 case 6:
                     if let message6 = self.message6, let fontSize = frame.tSz {
-                        self.drawText(frame: frame.cgRect, text: message6.timeString, context: context.cgContext, fontSize: fontSize)
+                        self.drawText(frame: frame.cgRect, text: message6.timeString, context: context.cgContext, fontSize: fontSize, color: frame.textColor)
                     }
                     break
                 case 7:
                     if let timerId = frame.uid, let timerValue = self.message7[timerId], let fontSize = frame.tSz {
-                        self.drawText(frame: frame.cgRect, text: timerValue, context: context.cgContext, fontSize: fontSize)
+                        self.drawText(frame: frame.cgRect, text: timerValue, context: context.cgContext, fontSize: fontSize, color: frame.textColor)
                     }
                     break
                 default:
@@ -170,10 +170,14 @@ class SyphonService {
     }
     
     func drawText(frame: CGRect, text: String, context: CGContext, fontSize: Int) {
-        drawText(frame: frame, text: text, context: context, fontSize: CGFloat(fontSize))
+        drawText(frame: frame, text: text, context: context, fontSize: CGFloat(fontSize), color: NSColor.white)
     }
     
-    func drawText(frame: CGRect, text: String, context: CGContext, fontSize: CGFloat) {
+    func drawText(frame: CGRect, text: String, context: CGContext, fontSize: Int, color: NSColor) {
+        drawText(frame: frame, text: text, context: context, fontSize: CGFloat(fontSize), color: color)
+    }
+    
+    func drawText(frame: CGRect, text: String, context: CGContext, fontSize: CGFloat, color: NSColor) {
         let paragraphStyle = NSMutableParagraphStyle()
         paragraphStyle.alignment = .center
         
@@ -185,7 +189,7 @@ class SyphonService {
         let attrs = [
             NSAttributedString.Key.font: currentFont!,
             NSAttributedString.Key.paragraphStyle: paragraphStyle,
-            NSAttributedString.Key.foregroundColor: NSColor.white,
+            NSAttributedString.Key.foregroundColor: color,
         ]
         
         let textTransform = CGAffineTransform(scaleX: -1.0, y: -1.0)

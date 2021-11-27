@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import AppKit
 
 enum MessageType: String, Decodable {
     case ath
@@ -136,7 +137,7 @@ struct ProPresenterStageDisplayFrame: Codable {
     var ufr: String
     var mde: Int
 //    var tAl: Int
-//    var tCl: String
+    var tCl: String?
     var tSz: Int?
     var nme: String
     var typ: Int // make this an enum and create custom frames
@@ -149,6 +150,31 @@ struct ProPresenterStageDisplayFrame: Codable {
             return tSz
         }
         return 0
+    }
+    
+    var textColor: NSColor {
+        guard let tCl = tCl else { return NSColor.white }
+
+        let colorComponents = tCl.components(separatedBy: " ")
+        
+        guard colorComponents.count > 0 else { return NSColor.white }
+            
+        guard colorComponents.count >= 3 else { return NSColor.white }
+        let n1 = NumberFormatter().number(from: colorComponents[0])
+        let n2 = NumberFormatter().number(from: colorComponents[1])
+        let n3 = NumberFormatter().number(from: colorComponents[2])
+        
+        guard let n1 = n1, let n2 = n2, let n3 = n3 else { return NSColor.white }
+        
+        guard colorComponents.count == 4 else {
+            return NSColor(deviceRed: CGFloat(truncating: n1), green: CGFloat(truncating: n2), blue: CGFloat(truncating: n3), alpha: 1.0)
+        }
+        
+        guard let n4 = NumberFormatter().number(from: colorComponents[3]) else {
+            return NSColor(deviceRed: CGFloat(truncating: n1), green: CGFloat(truncating: n2), blue: CGFloat(truncating: n3), alpha: 1.0)
+        }
+        
+        return NSColor(deviceRed: CGFloat(truncating: n1), green: CGFloat(truncating: n2), blue: CGFloat(truncating: n3), alpha: CGFloat(truncating: n4))
     }
     
     var frameGeometry: [String] {

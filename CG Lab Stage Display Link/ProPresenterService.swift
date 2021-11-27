@@ -23,11 +23,9 @@ class ProPresenterService: WebSocketDelegate {
     private var request: URLRequest!
     private let nc = NotificationCenter.default
     private var timer: Timer?
-    private var renderTimer: Timer?
     private var syphonServer: SyphonService?
     
     private var currentLayout: ProPresenterCurrentStageLayout?
-//    private var currentStageDisplayLayout: ProPresenterStageLayout?
     private var allStageDisplayLayouts: ProPresenterAllStageLayout?
     
     private var systemTime: String?
@@ -192,7 +190,7 @@ class ProPresenterService: WebSocketDelegate {
             case .ath(let rawMessage):
                 if rawMessage.ath {
                     if connectionStatus != .connected {
-                        timer = Timer.scheduledTimer(timeInterval: 1, target: self, selector: #selector(checkConnection), userInfo: nil, repeats: true)
+                        timer = Timer.scheduledTimer(timeInterval: 10, target: self, selector: #selector(checkConnection), userInfo: nil, repeats: true)
                         connectionStatus = .connected
                         notifyStatus()
                     }
@@ -273,11 +271,8 @@ class ProPresenterService: WebSocketDelegate {
             }
         }
         
-        self.renderTimer?.invalidate()
-        self.renderTimer = Timer.scheduledTimer(withTimeInterval: 0.25, repeats: false) { _ in
-            DispatchQueue.main.async {
-                self.syphonServer?.renderFrame()
-            }
+        DispatchQueue.main.async {
+            self.syphonServer?.renderFrame()
         }
     }
     
