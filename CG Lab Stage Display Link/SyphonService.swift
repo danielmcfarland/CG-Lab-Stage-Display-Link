@@ -151,6 +151,11 @@ class SyphonService {
                         self.drawText(frame: frame.cgRect, text: timerValue, context: context.cgContext, fontSize: fontSize, color: frame.textColor)
                     }
                     break
+                case 8:
+                    if let message8 = self.message8, let fontSize = frame.tSz {
+                        self.drawText(frame: frame.cgRect, text: message8.txt, context: context.cgContext, fontSize: fontSize, color: frame.textColor)
+                    }
+                    break
                 default:
 
                     break
@@ -230,6 +235,10 @@ class SyphonService {
     
     func setMessage7(_ message: ProPresenterTimer) {
         message7[message.uid] = message.txt
+    }
+    
+    func setMessage8(_ message: ProPresenterVideoTimer) {
+        message8 = message
     }
 }
 

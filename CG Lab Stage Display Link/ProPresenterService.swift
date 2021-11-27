@@ -237,6 +237,7 @@ class ProPresenterService: WebSocketDelegate {
                 dataChanged = true
             case .vid(let rawMessage):
                 message = rawMessage
+                syphonServer?.setMessage8(rawMessage)
             case .cc(let rawMessage):
                 message = rawMessage
             }
