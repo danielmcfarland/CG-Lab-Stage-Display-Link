@@ -369,3 +369,20 @@ class FrameRect {
         return CGRect(x: getFrame.x, y: getFrame.y, width: getFrame.width, height: getFrame.height)
     }
 }
+
+struct LiveStreamFrame: Codable {
+    var RVLiveStream_action: String
+    var RVLiveStream_frameDataLength: Int
+    var RVLiveStream_frameData: String
+    
+    var frameData: Data? {
+        return Data(base64Encoded: RVLiveStream_frameData)
+    }
+    
+    var frame: NSImage? {
+        guard let frameData = frameData else {
+            return nil
+        }
+        return NSImage(data: frameData)
+    }
+}

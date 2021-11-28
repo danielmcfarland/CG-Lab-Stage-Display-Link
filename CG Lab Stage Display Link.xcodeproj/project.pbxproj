@@ -9,6 +9,7 @@
 /* Begin PBXBuildFile section */
 		681A682D274F950400935A13 /* Syphon.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 681A682B274F950000935A13 /* Syphon.framework */; };
 		681A682E274F950400935A13 /* Syphon.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 681A682B274F950000935A13 /* Syphon.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		6841FDEB2753E474000EC717 /* LiveStreamService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6841FDEA2753E474000EC717 /* LiveStreamService.swift */; };
 		685692BD2743A840006F841E /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 685692BC2743A840006F841E /* AppDelegate.swift */; };
 		685692BF2743A840006F841E /* ViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 685692BE2743A840006F841E /* ViewController.swift */; };
 		685692C12743A84D006F841E /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 685692C02743A84D006F841E /* Assets.xcassets */; };
@@ -36,6 +37,7 @@
 
 /* Begin PBXFileReference section */
 		681A682B274F950000935A13 /* Syphon.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; path = Syphon.framework; sourceTree = "<group>"; };
+		6841FDEA2753E474000EC717 /* LiveStreamService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiveStreamService.swift; sourceTree = "<group>"; };
 		685692B92743A840006F841E /* CG Lab Stage Display Link.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "CG Lab Stage Display Link.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		685692BC2743A840006F841E /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		685692BE2743A840006F841E /* ViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewController.swift; sourceTree = "<group>"; };
@@ -85,6 +87,7 @@
 				685692D027453EF0006F841E /* ProPresenterMessage.swift */,
 				685692CB27442EE1006F841E /* ProPresenterService.swift */,
 				685692D727493050006F841E /* SyphonService.swift */,
+				6841FDEA2753E474000EC717 /* LiveStreamService.swift */,
 				685692D927493149006F841E /* MacGraphicsImageRenderer.swift */,
 				685692C02743A84D006F841E /* Assets.xcassets */,
 				685692C22743A84D006F841E /* Main.storyboard */,
@@ -173,6 +176,7 @@
 			files = (
 				685692BF2743A840006F841E /* ViewController.swift in Sources */,
 				685692BD2743A840006F841E /* AppDelegate.swift in Sources */,
+				6841FDEB2753E474000EC717 /* LiveStreamService.swift in Sources */,
 				685692D127453EF0006F841E /* ProPresenterMessage.swift in Sources */,
 				685692D827493050006F841E /* SyphonService.swift in Sources */,
 				685692CC27442EE1006F841E /* ProPresenterService.swift in Sources */,

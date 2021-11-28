@@ -7,6 +7,8 @@
 
 import Foundation
 import Starscream
+import VideoToolbox
+import AppKit
 
 enum ConnectionStatus {
     case connected
@@ -17,13 +19,16 @@ enum ConnectionStatus {
 
 class ProPresenterService: WebSocketDelegate {
     
+    private var displayLink: CVDisplayLink?
     private var server: String?
     private var port: String?
     private var password: String?
     private var request: URLRequest!
     private let nc = NotificationCenter.default
     private var timer: Timer?
-    private var syphonServer: SyphonService?
+    private var frameTimer: Timer?
+    private var syphonServer: SyphonService = SyphonService()
+    private var liveStreamService: LiveStreamService = LiveStreamService()
     
     private var currentLayout: ProPresenterCurrentStageLayout?
     private var allStageDisplayLayouts: ProPresenterAllStageLayout?
@@ -31,12 +36,22 @@ class ProPresenterService: WebSocketDelegate {
     private var systemTime: String?
     private var messageSystem: ProPresenterSystem?
     private var messageCurrentSlide: ProPresenterCurrentSlide?
+    private var disconnectRequested = false
+    
+    private var liveFrame: NSImage?
     
     init() {
         nc.post(name: Notification.Name("ProPresenterService_Status"), object: connectionStatus)
-        DispatchQueue.main.async {
-            self.syphonServer = SyphonService()
-        }
+        
+        CVDisplayLinkCreateWithActiveCGDisplays(&displayLink)
+        CVDisplayLinkSetOutputCallback(displayLink!, { (displayLink, inNow, inOutputTime, flagsIn, flagsOut, displayLinkContext) -> CVReturn in
+            autoreleasepool {
+                unsafeBitCast(displayLinkContext, to: ProPresenterService.self).redrawFrame()
+            }
+            return kCVReturnSuccess
+        }, Unmanaged.passUnretained(self).toOpaque())
+
+        CVDisplayLinkStart(displayLink!)
     }
     
     var currentStageDisplayLayout: ProPresenterStageLayout? {
@@ -64,6 +79,7 @@ class ProPresenterService: WebSocketDelegate {
     }
     
     func connect() {
+        disconnectRequested = false
         if let timer = timer {
             timer.invalidate()
         }
@@ -78,7 +94,7 @@ class ProPresenterService: WebSocketDelegate {
                 socket.connect()
                 
                 DispatchQueue.main.asyncAfter(deadline: .now() + 5) {
-                    if self.connectionStatus != .connected {
+                    if self.connectionStatus != .connected && self.disconnectRequested == false {
                         self.socket.forceDisconnect()
                         self.connect()
                     }
@@ -88,14 +104,18 @@ class ProPresenterService: WebSocketDelegate {
     }
     
     func disconnect() {
+        disconnectRequested = true
         if let socket = socket {
             connectionStatus = .disconnecting
             notifyStatus()
             socket.forceDisconnect()
+            liveStreamService.disconnect()
+            frameTimer?.invalidate()
+            frameTimer = nil
         }
     }
     
-    func authenticate() {
+    @objc func authenticate() {
         if let socket = socket, let password = password {
             let authString = "{\"pwd\": \"\(password)\", \"ptl\": \"610\", \"acn\": \"ath\"}"
             socket.write(string: authString)
@@ -190,9 +210,13 @@ class ProPresenterService: WebSocketDelegate {
             case .ath(let rawMessage):
                 if rawMessage.ath {
                     if connectionStatus != .connected {
-                        timer = Timer.scheduledTimer(timeInterval: 10, target: self, selector: #selector(checkConnection), userInfo: nil, repeats: true)
+                        timer = Timer.scheduledTimer(timeInterval: 10, target: self, selector: #selector(authenticate), userInfo: nil, repeats: true)
                         connectionStatus = .connected
                         notifyStatus()
+                        if let server = server, let port = port {
+                            liveStreamService.connectLiveSlide(server: server, port: port)
+                        }
+                        frameTimer = Timer.scheduledTimer(timeInterval: 1/24, target: self, selector: #selector(getLiveFrame), userInfo: nil, repeats: true)
                     }
                     allStageLayouts()
                     currentStageLayout()
@@ -202,11 +226,11 @@ class ProPresenterService: WebSocketDelegate {
                 message = rawMessage
                 messageSystem = rawMessage
                 systemTime = rawMessage.timeString
-                syphonServer?.setMessage6(rawMessage)
+                syphonServer.setMessage6(rawMessage)
                 dataChanged = true
             case .tmr(let rawMessage):
                 message = rawMessage
-                syphonServer?.setMessage7(rawMessage)
+                syphonServer.setMessage7(rawMessage)
                 dataChanged = true
             case .fv(let rawMessage):
                 extractFrames(frames: rawMessage.ary)
@@ -233,11 +257,11 @@ class ProPresenterService: WebSocketDelegate {
                 allStageDisplayLayouts = rawMessage
             case .msg(let rawMessage):
                 message = rawMessage
-                syphonServer?.setMessage5(rawMessage)
+                syphonServer.setMessage5(rawMessage)
                 dataChanged = true
             case .vid(let rawMessage):
                 message = rawMessage
-                syphonServer?.setMessage8(rawMessage)
+                syphonServer.setMessage8(rawMessage)
             case .cc(let rawMessage):
                 message = rawMessage
             }
@@ -257,43 +281,54 @@ class ProPresenterService: WebSocketDelegate {
         nc.post(name: Notification.Name("ProPresenterService_Status"), object: connectionStatus)
     }
     
-    @objc func checkConnection() {
-        authenticate()
-    }
-    
     func triggerRedraw() {
         // ensure redraw is not in progress before
-        syphonServer?.newFrame()
+        syphonServer.newFrame()
         
         if let currentStageDisplayLayout = currentStageDisplayLayout {
-            self.syphonServer?.setBorders(currentStageDisplayLayout.brd)
+            self.syphonServer.setBorders(currentStageDisplayLayout.brd)
             currentStageDisplayLayout.fme.forEach { frame in
-                self.syphonServer?.addToFrame(frame: frame)
+                self.syphonServer.addToFrame(frame: frame)
             }
         }
         
-        DispatchQueue.main.async {
-            self.syphonServer?.renderFrame()
-        }
+//        DispatchQueue.main.async {
+//            self.syphonServer.renderFrame()
+//        }
     }
     
     func extractFrames(frames: [ProPresenterMessage]) {
         for frame in frames {
             switch frame {
             case .cs(let currentSlide):
-                syphonServer?.setMessage1(currentSlide)
+                syphonServer.setMessage1(currentSlide)
                 break
             case .ns(let nextSlide):
-                syphonServer?.setMessage2(nextSlide)
+                syphonServer.setMessage2(nextSlide)
                 break
             case .csn(let currentSlideNote):
-                syphonServer?.setMessage3(currentSlideNote)
+                syphonServer.setMessage3(currentSlideNote)
                 break
             case .nsn(let nextSlideNote):
-                syphonServer?.setMessage4(nextSlideNote)
+                syphonServer.setMessage4(nextSlideNote)
                 break
             default:
                 break
+            }
+        }
+    }
+    
+    @objc func getLiveFrame() {
+        liveFrame = liveStreamService.getLiveFrame()
+        self.syphonServer.renderFrame()
+    }
+    
+    func redrawFrame() {
+        if connectionStatus == .connected {
+            if let liveFrame = liveFrame {
+                syphonServer.generateOutput(image: liveFrame)
+            } else {
+                syphonServer.generateOutput()
             }
         }
     }
