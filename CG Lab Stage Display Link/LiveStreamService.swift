@@ -17,14 +17,7 @@ class LiveStreamService: WebSocketDelegate {
     private var socketLiveStream: WebSocket!
     private var liveFrame: NSImage?
     
-    init() {
-        
-    }
-    
     func connectLiveSlide(server: String, port: String) {
-//        self.server = server
-//        self.port = port
-        
         if server.count > 0 && port.count > 0 {
             requestLive = URLRequest(url: URL(string: "ws://\(server):\(port)/livestream")!)
             requestLive.timeoutInterval = 2

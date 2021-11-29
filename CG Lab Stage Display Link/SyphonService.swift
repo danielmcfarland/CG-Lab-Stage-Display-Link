@@ -72,6 +72,7 @@ class SyphonService {
     
     func generateOutput(image: NSImage) {
         liveFrame = image
+        renderFrame()
         generateOutput()
     }
     
@@ -199,8 +200,8 @@ class SyphonService {
     }
     
     func renderFrame() -> Void {
-        let image = getFrame()
-        currentFrameImage = image.cgImage(forProposedRect: nil, context: nil, hints: nil)
+        let frame = getFrame()
+        currentFrameImage = frame.cgImage(forProposedRect: nil, context: nil, hints: nil)
     }
     
     func drawText(frame: CGRect, text: String, context: CGContext) {

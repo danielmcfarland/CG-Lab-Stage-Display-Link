@@ -26,7 +26,6 @@ class ProPresenterService: WebSocketDelegate {
     private var request: URLRequest!
     private let nc = NotificationCenter.default
     private var timer: Timer?
-    private var frameTimer: Timer?
     private var syphonServer: SyphonService = SyphonService()
     private var liveStreamService: LiveStreamService = LiveStreamService()
     
@@ -110,8 +109,6 @@ class ProPresenterService: WebSocketDelegate {
             notifyStatus()
             socket.forceDisconnect()
             liveStreamService.disconnect()
-            frameTimer?.invalidate()
-            frameTimer = nil
         }
     }
     
@@ -205,7 +202,6 @@ class ProPresenterService: WebSocketDelegate {
         var dataChanged = false
 
         do {
-            var message: Decodable!
             switch try decoder.decode(ProPresenterMessage.self, from: json) {
             case .ath(let rawMessage):
                 if rawMessage.ath {
@@ -216,57 +212,54 @@ class ProPresenterService: WebSocketDelegate {
                         if let server = server, let port = port {
                             liveStreamService.connectLiveSlide(server: server, port: port)
                         }
-                        frameTimer = Timer.scheduledTimer(timeInterval: 1/24, target: self, selector: #selector(getLiveFrame), userInfo: nil, repeats: true)
                     }
                     allStageLayouts()
                     currentStageLayout()
                     dataChanged = true
                 }
             case .sys(let rawMessage):
-                message = rawMessage
                 messageSystem = rawMessage
                 systemTime = rawMessage.timeString
                 syphonServer.setMessage6(rawMessage)
                 dataChanged = true
+                break
             case .tmr(let rawMessage):
-                message = rawMessage
                 syphonServer.setMessage7(rawMessage)
                 dataChanged = true
+                break
             case .fv(let rawMessage):
                 extractFrames(frames: rawMessage.ary)
                 dataChanged = true
-            case .cs(let rawMessage):
-                message = rawMessage
-            case .ns(let rawMessage):
-                message = rawMessage
-            case .csn(let rawMessage):
-                message = rawMessage
-            case .nsn(let rawMessage):
-                message = rawMessage
+                break
             case .sl(let rawMessage):
-                message = rawMessage
                 currentLayout = ProPresenterCurrentStageLayout(uid: rawMessage.uid)
                 dataChanged = true
+                break
             case .psl(let rawMessage):
-                message = rawMessage
                 currentLayout = rawMessage
                 requestFrameValues(currentLayout!.uid)
                 dataChanged = true
+                break
             case .asl(let rawMessage):
-                message = rawMessage
                 allStageDisplayLayouts = rawMessage
+                break
             case .msg(let rawMessage):
-                message = rawMessage
                 syphonServer.setMessage5(rawMessage)
                 dataChanged = true
+                break
             case .vid(let rawMessage):
-                message = rawMessage
                 syphonServer.setMessage8(rawMessage)
-            case .cc(let rawMessage):
-                message = rawMessage
-            }
-            if let message = message {
-//                print(message)
+                break
+            case .cc(_):
+                break
+            case .cs(_):
+                break
+            case .ns(_):
+                break
+            case .csn(_):
+                break
+            case .nsn(_):
+                break
             }
             if dataChanged {
                 triggerRedraw()
@@ -291,10 +284,6 @@ class ProPresenterService: WebSocketDelegate {
                 self.syphonServer.addToFrame(frame: frame)
             }
         }
-        
-//        DispatchQueue.main.async {
-//            self.syphonServer.renderFrame()
-//        }
     }
     
     func extractFrames(frames: [ProPresenterMessage]) {
@@ -319,12 +308,12 @@ class ProPresenterService: WebSocketDelegate {
     }
     
     @objc func getLiveFrame() {
-        liveFrame = liveStreamService.getLiveFrame()
-        self.syphonServer.renderFrame()
+        
     }
     
     func redrawFrame() {
         if connectionStatus == .connected {
+            liveFrame = liveStreamService.getLiveFrame()
             if let liveFrame = liveFrame {
                 syphonServer.generateOutput(image: liveFrame)
             } else {
