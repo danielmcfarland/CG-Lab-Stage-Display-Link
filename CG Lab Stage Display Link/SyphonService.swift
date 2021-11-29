@@ -9,12 +9,11 @@ import Foundation
 import Cocoa
 import Syphon
 import CoreGraphics
-//import VideoToolbox
 import MetalKit
 
 class SyphonService {
     
-//    private var displayLink: CVDisplayLink?
+    private var displayLink: CVDisplayLink?
     private var metalDevice: MTLDevice? = MTLCreateSystemDefaultDevice()
     private var textureLoader: MTKTextureLoader?
     
@@ -49,19 +48,18 @@ class SyphonService {
         
         initOutput()
         setupRenderer()
-        renderFrame()
         
         syphonServer = SyphonMetalServer(name: "Video", device: metalDevice!)
         
-//        CVDisplayLinkCreateWithActiveCGDisplays(&displayLink)
-//        CVDisplayLinkSetOutputCallback(displayLink!, { (displayLink, inNow, inOutputTime, flagsIn, flagsOut, displayLinkContext) -> CVReturn in
-//            autoreleasepool {
-//                unsafeBitCast(displayLinkContext, to: SyphonService.self).generateOutput()
-//            }
-//            return kCVReturnSuccess
-//        }, Unmanaged.passUnretained(self).toOpaque())
-//
-//        CVDisplayLinkStart(displayLink!)
+        CVDisplayLinkCreateWithActiveCGDisplays(&displayLink)
+        CVDisplayLinkSetOutputCallback(displayLink!, { (displayLink, inNow, inOutputTime, flagsIn, flagsOut, displayLinkContext) -> CVReturn in
+            autoreleasepool {
+                unsafeBitCast(displayLinkContext, to: SyphonService.self).generateOutput()
+            }
+            return kCVReturnSuccess
+        }, Unmanaged.passUnretained(self).toOpaque())
+
+        CVDisplayLinkStart(displayLink!)
     }
     
     func initOutput() {
@@ -69,11 +67,9 @@ class SyphonService {
             textureLoader = MTKTextureLoader(device: metalDevice)
         }
     }
-    
-    func generateOutput(image: NSImage) {
+
+    func setLiveFrame(image: NSImage) {
         liveFrame = image
-        renderFrame()
-        generateOutput()
     }
     
     func generateOutput() {
@@ -146,13 +142,7 @@ class SyphonService {
                 switch frame.typ {
                 case 1:
                     if let message1 = self.message1, let fontSize = frame.tSz {
-                        if frame.mde == 2 {
-                            if let liveFrame = self.liveFrame {
-                                liveFrame.draw(in: frameRect)
-                            }
-                        } else {
-                            self.drawText(frame: frameRect, text: message1.txt, context: context.cgContext, fontSize: fontSize, color: frame.textColor)
-                        }
+                        self.drawText(frame: frameRect, text: message1.txt, context: context.cgContext, fontSize: fontSize, color: frame.textColor)
                     }
                     break
                 case 2:
@@ -199,9 +189,8 @@ class SyphonService {
         return frameImage
     }
     
-    func renderFrame() -> Void {
-        let frame = getFrame()
-        currentFrameImage = frame.cgImage(forProposedRect: nil, context: nil, hints: nil)
+    @objc func renderFrame() -> Void {
+        currentFrameImage = getFrame().cgImage(forProposedRect: nil, context: nil, hints: nil)
     }
     
     func drawText(frame: CGRect, text: String, context: CGContext) {
